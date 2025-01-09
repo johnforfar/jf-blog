@@ -13,12 +13,6 @@ export default withNextra({
   basePath,
   images: {
     unoptimized: true,
-    loader: 'custom',
-    loaderFile: './imageLoader.js',
   },
   assetPrefix: basePath,
-  webpack: (config) => {
-    config.resolve.fallback = { fs: false, path: false };
-    return config;
-  }
 })
