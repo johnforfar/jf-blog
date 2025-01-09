@@ -5,12 +5,14 @@ const withNextra = nextra({
   themeConfig: './theme.config.tsx'
 })
 
+const basePath = process.env.NODE_ENV === 'production' ? '/jf-blog' : ''
+
 export default withNextra({
   output: 'export',
-  basePath: '/jf-blog',
+  basePath,
   images: {
     unoptimized: true,
   },
-  trailingSlash: true,
-  assetPrefix: '/jf-blog'
+  assetPrefix: basePath,
+  trailingSlash: true
 })

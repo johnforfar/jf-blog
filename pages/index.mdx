@@ -6,6 +6,7 @@ description: Welcome to my blog about code and technology.
 ---
 
 import { CodeWallet } from '../components/CodeWallet'
+import Image from 'next/image'
 
 # Johnny's Blog
 
@@ -21,7 +22,13 @@ You can fork it and host it for free on GitHub or Vercel !
 
 Thanks 🫡
 
-![Pumpkin Meme](/pump-kin-meme.jpeg)
+<Image 
+  src="/pump-kin-meme.jpeg"
+  alt="Pumpkin Meme"
+  width={500}
+  height={300}
+  priority
+/>
 
 ## Recent Posts
 
