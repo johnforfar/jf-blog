@@ -6,4 +6,9 @@ const withNextra = nextra({
 })
 
 export default withNextra({
+  output: 'export',
+  basePath: '/jf-blog',
+  images: {
+    unoptimized: true,
+  },
 })
