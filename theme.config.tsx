@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 const themeConfig = {
   footer: <p>© {new Date().getFullYear()} John Forfar</p>,
   head: ({ title, meta }: { title: string; meta: { description?: string; tag?: string; author?: string } }) => (
@@ -11,7 +13,11 @@ const themeConfig = {
     </>
   ),
   readMore: 'Read More →',
-  postFooter: null,
+  postFooter: (
+    <div>
+      <Link href="/" className="text-blue-500 hover:underline">Back to Home</Link>
+    </div>
+  ),
   darkMode: true,
   navs: [
     {
