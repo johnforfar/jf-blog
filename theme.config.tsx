@@ -10,6 +10,7 @@ const themeConfig = {
       )}
       {meta.tag && <meta name="keywords" content={meta.tag} />}
       {meta.author && <meta name="author" content={meta.author} />}
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     </>
   ),
   readMore: 'Read More →',
@@ -24,7 +25,13 @@ const themeConfig = {
       url: 'https://github.com/johnforfar/jf-blog',
       name: 'GitHub'
     }
-  ]
+  ],
+  useNextSeoProps() {
+    return {
+      titleTemplate: '%s – Johnny\'s Blog'
+    }
+  },
+  basePath: process.env.NODE_ENV === 'production' ? '/jf-blog' : ''
 }
 
 export default themeConfig
