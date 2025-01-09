@@ -1,36 +1,143 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next.js Blog with Code Wallet Integration
 
-## Getting Started
+A minimalist blog template built with Next.js, MDX, and Code Wallet integration for receiving tips. Fork this repository to create your own blog with built-in tipping functionality.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+* 🚀 Built with Next.js and MDX
+* 💰 Code Wallet integration for receiving tips
+* 🌓 Dark mode support
+* 📱 Responsive design
+* 🖼️ Support for images (via GitHub Pages)
+* 🎥 YouTube video embeds
+* 🔄 Multiple deployment options
+
+## Quick Start
+
+1. Fork this repository
+2. Clone your forked repository
+3. Install dependencies:
+
+```
+bun install
+```
+
+4. Create a .env file:
+
+```
+NEXT_PUBLIC_CODE_WALLET_ADDRESS=your_code_wallet_address
+NEXT_PUBLIC_CODE_WALLET_AMOUNT=0.05
+```
+
+5. Run the development server:
+
+```
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Adding Content
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Blog Posts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create new .mdx files in pages/posts/ directory:
 
-## Learn More
+```
+---
+title: My Post Title
+date: 2024-03-21
+description: A brief description
+---
 
-To learn more about Next.js, take a look at the following resources:
+# My Post Title
+Content goes here...
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+<CodeWallet />
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Adding Media
 
-## Deploy on Vercel
+* **Images**: Store images in GitHub Pages and reference them:
+```
+![Alt text](image-url)
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+* **Videos**: Embed YouTube videos:
+```
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/VIDEO_ID"
+  frameborder="0"
+  allowfullscreen
+></iframe>
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment Options
+
+### Vercel (Recommended)
+
+1. Fork this repository
+2. Go to Vercel
+3. Import your forked repository
+4. Add environment variables
+5. Deploy
+
+Free tier includes:
+* Unlimited static sites
+* Automatic HTTPS
+* Global CDN
+* Continuous deployment
+
+### GitHub Pages
+
+1. Update next.config.mjs:
+
+```
+export default withNextra({
+  output: 'export',
+  basePath: '/your-repo-name'
+})
+```
+
+2. Add GitHub Actions workflow:
+
+```
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [ main ]
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: bun install
+      - run: bun run build
+      - uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./out
+```
+
+## Environment Variables
+
+Required environment variables:
+* NEXT_PUBLIC_CODE_WALLET_ADDRESS: Your Code Wallet address for receiving tips
+* NEXT_PUBLIC_CODE_WALLET_AMOUNT: Default tip amount in USD
+
+## License
+
+MIT License - feel free to use this template for your own blog!
+
+## Acknowledgments
+
+* Built with Next.js
+* Blog functionality by Nextra
+* Tipping powered by Code Wallet
+
+## Example Post
+
+Check out the Hello World post to see how to:
+* Add images from GitHub Pages
+* Embed YouTube videos
+* Include a Code Wallet tip button
