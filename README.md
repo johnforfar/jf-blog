@@ -1,143 +1,119 @@
-# Next.js Blog with Code Wallet Integration
+# Nextra Blog Template with Code Wallet
 
-A minimalist blog template built with Next.js, MDX, and Code Wallet integration for receiving tips. Fork this repository to create your own blog with built-in tipping functionality.
+A simple blog template that lets you write posts and receive tips through Code Wallet. Perfect for non-technical people who want to start their own blog!
 
 ## Features
 
-* 🚀 Built with Next.js and MDX
-* 💰 Code Wallet integration for receiving tips
-* 🌓 Dark mode support
-* 📱 Responsive design
-* 🖼️ Support for images (via GitHub Pages)
-* 🎥 YouTube video embeds
-* 🔄 Multiple deployment options
+* 💰 Receive tips with Code Wallet 
+* ✍️ Easy writing using Markdown
+* 📱 Works on mobile
+* 🌙 Dark mode included
+* 🖼️ Add images easily
+* 🎥 Add YouTube videos
+* ⚡ Fast loading
 
-## Quick Start
+## Quick Start for GitHub Pages
 
-1. Fork this repository
-2. Clone your forked repository
-3. Install dependencies:
+1. Create a GitHub account if you don't have one
+2. Click "Fork" at the top of this repository 
+3. Go to your new repository's Settings > Pages
+4. Under "Build and deployment" select:
+   - Source: "Deploy from a branch"
+   - Branch: "gh-pages" / "/(root)"
+5. Click Save
+6. Wait 5 minutes and your blog will be live at: `https://YOUR_USERNAME.github.io/YOUR_REPO_NAME`
 
-```
-bun install
-```
+### Adding a Custom Domain (GitHub Pages)
 
-4. Create a .env file:
+1. Go to your domain provider (e.g., GoDaddy, Namecheap)
+2. Add these DNS records:
+   ```
+   Type: A
+   Host: @
+   Value: 185.199.108.153
+   Value: 185.199.109.153
+   Value: 185.199.110.153
+   Value: 185.199.111.153
 
-```
-NEXT_PUBLIC_CODE_WALLET_ADDRESS=your_code_wallet_address
-NEXT_PUBLIC_CODE_WALLET_AMOUNT=0.05
-```
+   Type: CNAME
+   Host: www
+   Value: YOUR_USERNAME.github.io
+   ```
+3. In your repository Settings > Pages:
+   - Enter your domain in "Custom domain"
+   - Click "Save"
+   - Wait for DNS check to complete
+   - Check "Enforce HTTPS"
 
-5. Run the development server:
+## Quick Start for Vercel (Alternative)
 
-```
-bun dev
-```
+1. Create a Vercel account
+2. Fork this repository
+3. Go to vercel.com/new
+4. Choose "Import Git Repository" 
+5. Find and select your forked repository
+6. Click Deploy
 
-## Adding Content
+### Adding a Custom Domain (Vercel)
 
-### Blog Posts
+1. Go to your project in Vercel
+2. Click "Settings" > "Domains"
+3. Add your domain name
+4. Vercel will show you the required DNS records
+5. Add these records at your domain provider
+6. Wait for DNS to propagate (usually 15 minutes)
 
-Create new .mdx files in pages/posts/ directory:
+## Writing Blog Posts
 
+1. Go to the `pages/posts` folder
+2. Create a new file ending in `.mdx`
+3. Add this at the top:
 ```
 ---
-title: My Post Title
-date: 2024-03-21
-description: A brief description
+title: My Blog Post
+date: 2024-01-09
+description: A short description
 ---
-
-# My Post Title
-Content goes here...
-
+```
+4. Write your post using Markdown
+5. Add the tip button at the bottom:
+```
 <CodeWallet />
 ```
 
-### Adding Media
+## Adding Images & Videos
 
-* **Images**: Store images in GitHub Pages and reference them:
+### Images
+1. Put your image in the `public` folder
+2. Add it to your post:
 ```
-![Alt text](image-url)
-```
-
-* **Videos**: Embed YouTube videos:
-```
-<iframe
-  width="560"
-  height="315"
-  src="https://www.youtube.com/embed/VIDEO_ID"
-  frameborder="0"
-  allowfullscreen
-></iframe>
+![Description](/your-image.jpg)
 ```
 
-## Deployment Options
+### YouTube Videos
+1. Go to the YouTube video
+2. Click Share > Embed
+3. Copy the iframe code and paste in your post
 
-### Vercel (Recommended)
+## Getting Tips
 
-1. Fork this repository
-2. Go to Vercel
-3. Import your forked repository
-4. Add environment variables
-5. Deploy
-
-Free tier includes:
-* Unlimited static sites
-* Automatic HTTPS
-* Global CDN
-* Continuous deployment
-
-### GitHub Pages
-
-1. Update next.config.mjs:
-
+1. Install Code Wallet on your phone
+2. Create a `.env` file with:
 ```
-export default withNextra({
-  output: 'export',
-  basePath: '/your-repo-name'
-})
+NEXT_PUBLIC_CODE_WALLET_ADDRESS=your_wallet_address
+NEXT_PUBLIC_CODE_WALLET_AMOUNT=0.05
 ```
 
-2. Add GitHub Actions workflow:
+## Need Help?
 
-```
-name: Deploy to GitHub Pages
-on:
-  push:
-    branches: [ main ]
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: bun install
-      - run: bun run build
-      - uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./out
-```
-
-## Environment Variables
-
-Required environment variables:
-* NEXT_PUBLIC_CODE_WALLET_ADDRESS: Your Code Wallet address for receiving tips
-* NEXT_PUBLIC_CODE_WALLET_AMOUNT: Default tip amount in USD
+Check out the Example Post to see how everything works!
 
 ## License
 
-MIT License - feel free to use this template for your own blog!
+MIT License - Feel free to use this for your own blog!
 
-## Acknowledgments
+## Thanks to
 
-* Built with Next.js
-* Blog functionality by Nextra
-* Tipping powered by Code Wallet
-
-## Example Post
-
-Check out the Hello World post to see how to:
-* Add images from GitHub Pages
-* Embed YouTube videos
-* Include a Code Wallet tip button
+* Next.js for the framework
+* Nextra for the blog features
+* Code Wallet for tipping

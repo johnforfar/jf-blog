@@ -7,10 +7,9 @@ const withNextra = nextra({
 
 export default withNextra({
   output: 'export',
-  basePath: '/jf-blog',
+  basePath: process.env.NODE_ENV === 'production' ? '/jf-blog' : '',
   images: {
     unoptimized: true,
   },
   trailingSlash: true,
-  assetPrefix: '/jf-blog',
 })
