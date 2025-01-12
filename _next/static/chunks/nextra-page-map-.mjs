@@ -3,7 +3,7 @@ export const pageMap = [{
   route: "/",
   frontMatter: {
     "type": "page",
-    "title": "Welcome to Johnny's Blog!",
+    "title": "Nextra blog template integration with Code Wallet",
     "date": new Date(1704758400000),
     "description": "Welcome to my blog about code and technology."
   }
