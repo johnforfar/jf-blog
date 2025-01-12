@@ -1,24 +1,27 @@
 import React, { useEffect, useRef } from 'react'
 import { elements } from '@code-wallet/elements'
 
-export const CodeWallet: React.FC = () => {
+interface CodeWalletProps {
+  amount: number
+}
+
+export const CodeWallet: React.FC<CodeWalletProps> = ({ amount }) => {
   const el = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!el.current) return
 
-    const button = elements.create('button', {
+    const { button } = elements.create('button', {
       currency: 'usd',
       destination: process.env.NEXT_PUBLIC_CODE_WALLET_ADDRESS!,
-      amount: Number(process.env.NEXT_PUBLIC_CODE_WALLET_AMOUNT || 0.05),
-    }).button
+      amount: amount,
+    })
 
     if (!button) return
-
     button.mount(el.current)
 
     return () => button?.unmount()
-  }, [])
+  }, [amount])
 
   return <div ref={el} className="code-wallet-container" />
 }
