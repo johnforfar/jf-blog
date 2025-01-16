@@ -31,7 +31,6 @@ const themeConfig = {
       titleTemplate: '%s – Johnny\'s Blog'
     }
   },
-  basePath: process.env.NODE_ENV === 'production' ? '/jf-blog' : ''
 }
 
 export default themeConfig
