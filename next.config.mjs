@@ -8,5 +8,13 @@ const withNextra = nextra({
 export default withNextra({
   images: {
     unoptimized: true,
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/api/proxy/:path*',
+        destination: '/api/proxy/:path*',
+      },
+    ]
   }
 })
