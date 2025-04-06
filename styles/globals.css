@@ -20,6 +20,79 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Override article padding */
+article {
+  margin-left: auto;
+  margin-right: auto;
+  padding-top: 0 !important; /* Removed 5rem padding */
+  padding-bottom: 0 !important; /* Removed 8rem padding */
+}
+
+/* NUCLEAR OPTION: Blog card image consistency */
+article.bg-gray-900 {
+  display: flex !important;
+  flex-direction: column !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+article a[href^="/"] {
+  display: block !important;
+  position: relative !important;
+  height: 0 !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  max-height: none !important;
+}
+
+article a[href^="/"] > span,
+article a[href^="/"] > span > span {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+article img,
+article a img,
+article > a > img,
+article > a > span > img,
+article a span img {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  transform: none !important;
+  transition: transform 0.3s ease-in-out !important;
+}
+
+/* Target the problematic Reddit image with extreme specificity */
+img[src*="Reddit"],
+img[src*="reddit"],
+img[src*="Bake-Off"],
+img[src*="bake-off"],
+img[src$="1.png"] {
+  object-fit: cover !important;
+  object-position: center !important;
+  transform: none !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+
+/* Fallback to handle any possible image scaling attempt */
+article * {
+  max-width: 100% !important;
+}
+
 /* Slider styling */
 input[type="range"] {
   -webkit-appearance: none;
@@ -74,4 +147,133 @@ input[type="range"]::-moz-range-thumb:hover {
   100% {
     transform: rotate(360deg);
   }
+}
+
+/* MDX Content Styling */
+.mdx-content {
+  /* Base text styling */
+  line-height: 1.7;
+  color: var(--foreground);
+}
+
+.mdx-content a {
+  color: #3182ce;
+  text-decoration: none;
+}
+
+.mdx-content a:hover {
+  text-decoration: underline;
+}
+
+/* Spacing for elements */
+.mdx-content > * {
+  margin-bottom: 1rem;
+}
+
+/* Image handling */
+.mdx-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.375rem;
+}
+
+/* Code blocks */
+.mdx-content pre {
+  padding: 1rem;
+  overflow-x: auto;
+  border-radius: 0.375rem;
+  background-color: #f7fafc;
+}
+
+.dark .mdx-content pre {
+  background-color: #1a202c;
+}
+
+/* Blockquotes */
+.mdx-content blockquote {
+  padding-left: 1rem;
+  border-left: 4px solid #cbd5e0;
+  font-style: italic;
+}
+
+/* Heading styles */
+.mdx-content h1 {
+  font-size: 2.25rem;
+  font-weight: bold;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.mdx-content h2 {
+  font-size: 1.875rem;
+  font-weight: bold;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.mdx-content h3 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.mdx-content ul, .mdx-content ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.mdx-content ul {
+  list-style-type: disc;
+}
+
+.mdx-content ol {
+  list-style-type: decimal;
+}
+
+.mdx-content li {
+  margin-bottom: 0.25rem;
+}
+
+/* Cover Image Styling */
+.cover-image-container {
+  position: relative;
+  width: 100%;
+  max-height: 400px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  border-radius: 0.5rem;
+}
+
+.cover-image {
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 0.5rem;
+}
+
+/* Fix for images in the MDX content */
+.mdx-content span.inline-block {
+  max-width: 100%;
+  display: block;
+}
+
+.mdx-content span.inline-block img {
+  position: static !important;
+  max-height: 600px;
+  width: auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+  min-width: auto !important;
+  min-height: auto !important;
+}
+
+/* Override article image styles which might be too aggressive */
+article img {
+  position: static !important;
+  max-width: 100% !important;
+  height: auto !important;
+  width: auto !important;
+  min-width: auto !important;
+  min-height: auto !important;
 }
