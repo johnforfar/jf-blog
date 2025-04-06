@@ -277,3 +277,34 @@ article img {
   min-width: auto !important;
   min-height: auto !important;
 }
+
+/* Exception for tag and category links */
+article a.tag-link,
+article a.category-link {
+  display: inline-block !important;
+  position: static !important;
+  height: auto !important;
+  width: auto !important;
+  overflow: visible !important;
+  max-height: none !important;
+  padding-bottom: 0 !important;
+}
+
+/* Add stronger reset styles to override any inline styles */
+article a[href^="/tags/"],
+article a[href^="/categories/"] {
+  display: inline-block !important;
+  position: static !important;
+  height: auto !important;
+  width: auto !important;
+  overflow: visible !important;
+  max-height: none !important;
+  padding: 0.25rem 0.5rem !important;
+  margin: 0.25rem !important;
+}
+
+/* Fix the margin between tags */
+article a[href^="/tags/"] + a[href^="/tags/"],
+article a[href^="/categories/"] + a[href^="/categories/"] {
+  margin-left: 0.5rem !important;
+}

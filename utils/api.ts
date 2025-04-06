@@ -21,73 +21,130 @@ interface PostFrontMatter {
   [key: string]: unknown;
 }
 
+/**
+ * Fetch a post by slug from the API
+ */
 export async function fetchPost(slug: string): Promise<{
   content: string;
   frontMatter: PostFrontMatter;
 }> {
   const baseUrl = typeof window === 'undefined'
     ? process.env.BACKEND_URL || 'http://localhost:3001'
-    : ''
+    : '';
     
-  const url = `${baseUrl}/api/posts/${slug}`
+  const url = `${baseUrl}/api/posts/${slug}`;
   console.log(`fetchPost - Fetching post: "${slug}" from ${url}`);
 
   try {
-    const response = await fetch(url)
+    // Prepare headers for future API key authentication
+    const headers: HeadersInit = {
+      'Accept': 'application/json, text/plain',
+      // Uncomment when API key is implemented
+      // 'Authorization': `Bearer ${process.env.API_KEY || ''}`,
+    };
+
+    const response = await fetch(url, { headers });
+    
     if (!response.ok) {
       console.error(`fetchPost - Error: Post "${slug}" not found (${response.status})`);
-      throw new Error(`Failed to fetch post "${slug}" (${response.status})`)
+      throw new Error(`Failed to fetch post "${slug}" (${response.status})`);
     }
     
-    const responseText = await response.text()
+    const responseText = await response.text();
     
-    // Check if response is JSON
-    let parsedData;
-    let isMDX = false;
-    
+    // First try to parse as JSON
     try {
-      // Try to parse as JSON first
-      parsedData = JSON.parse(responseText);
+      // Parse response as JSON
+      const parsedData = JSON.parse(responseText);
       console.log(`fetchPost - Response parsed as JSON`);
-    } catch {
-      // If not JSON, assume it's MDX with frontmatter
-      isMDX = true;
-      console.log(`fetchPost - Response is not JSON, treating as MDX`);
-    }
-    
-    if (!isMDX && parsedData) {
-      // It's a JSON object, extract content and frontmatter
-      const content = parsedData.content || '';
       
-      // Get date from the most reliable source
-      const date = parsedData.date || 
-                  (parsedData.frontMatter && parsedData.frontMatter.date) || 
-                  extractDateFromData(parsedData, slug);
+      // Log the FULL structure to debug
+      console.log('FULL PARSED DATA:', parsedData);
+      
+      // Extract content
+      const content = typeof parsedData.content === 'string' 
+        ? parsedData.content 
+        : '';
+      
+      // The metadata is nested inside a "metadata" object, not at the root level
+      const metadataSource = parsedData.metadata || {};
+      
+      // Create normalized frontmatter from the properly accessed metadata
+      const frontMatter = {
+        title: metadataSource.title || parsedData.title || slug.replace(/-/g, ' '),
+        date: metadataSource.date || parsedData.date || new Date().toISOString().split('T')[0],
+        description: metadataSource.summary || metadataSource.description || 
+                    parsedData.description || parsedData.summary || 'No description available',
+        tags: Array.isArray(metadataSource.tags) ? metadataSource.tags : [],
+        categories: Array.isArray(metadataSource.categories) ? metadataSource.categories : [],
+        coverImage: metadataSource.coverImage || parsedData.coverImage || null,
+        // Include any additional properties
+        ...(typeof metadataSource.authors !== 'undefined' ? { authors: metadataSource.authors } : {})
+      };
+      
+      console.log('NORMALIZED DATA:', frontMatter);
       
       return {
         content,
-        frontMatter: {
-          title: parsedData.title || (parsedData.frontMatter && parsedData.frontMatter.title) || slug.replace(/-/g, ' '),
-          date,
-          description: parsedData.description || parsedData.summary || 'No description available'
-        }
-      }
-    } else {
-      // Regular MDX processing with gray-matter
+        frontMatter
+      };
+    } 
+    // If not JSON, handle as MDX with frontmatter
+    catch {
+      console.log(`fetchPost - Response is not JSON, treating as MDX`);
+      
+      // Process using gray-matter for MDX files
       const { data: frontMatter, content } = matter(responseText);
       
+      console.log('MDX PARSING DATA:', {
+        title: frontMatter?.title,
+        date: frontMatter?.date,
+        tags: frontMatter?.tags,
+        categories: frontMatter?.categories
+      });
+      
+      // Normalize tags and categories for MDX as well
+      let tags = [];
+      if (Array.isArray(frontMatter.tags)) {
+        tags = frontMatter.tags;
+      } else if (typeof frontMatter.tags === 'string') {
+        tags = frontMatter.tags.split(',').map((tag: string) => tag.trim());
+      }
+      
+      let categories = [];
+      if (Array.isArray(frontMatter.categories)) {
+        categories = frontMatter.categories;
+      } else if (typeof frontMatter.categories === 'string') {
+        categories = frontMatter.categories.split(',').map((cat: string) => cat.trim());
+      }
+      
       return {
         content,
         frontMatter: {
+          ...frontMatter,
           title: frontMatter?.title || slug.replace(/-/g, ' '),
           date: frontMatter?.date || extractDateFromData(frontMatter, slug),
-          description: frontMatter?.description || 'No description available'
+          description: frontMatter?.description || 'No description available',
+          tags: tags,
+          categories: categories,
+          coverImage: frontMatter?.coverImage || null
         }
-      }
+      };
     }
   } catch (error) {
     console.error(`fetchPost - Error fetching "${slug}":`, error);
-    throw error;
+    // Return a fallback to prevent the app from crashing
+    return {
+      content: '',
+      frontMatter: {
+        title: slug.replace(/-/g, ' '),
+        date: new Date().toISOString().split('T')[0],
+        description: 'Failed to load post',
+        tags: [],
+        categories: [],
+        coverImage: null
+      }
+    };
   }
 }
 

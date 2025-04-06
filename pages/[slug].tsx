@@ -41,6 +41,9 @@ interface FrontMatter {
   description: string;
   date_gmt?: string;
   summary?: string;
+  coverImage?: string;
+  tags?: string[];
+  categories?: string[];
   [key: string]: unknown;
 }
 
@@ -173,10 +176,20 @@ export async function getStaticProps({ params }: { params: { slug: string } }) {
                        (frontMatter.date_gmt ? new Date(frontMatter.date_gmt).toISOString() : null) ||
                        extractDateFromSlug(params.slug);
 
+      console.log('BLOG POST PROPS:', {
+        slug: params.slug,
+        title: frontMatter.title,
+        date: postDate,
+        tags: frontMatter.tags,
+        categories: frontMatter.categories,
+        authors: frontMatter.authors
+      });
+
       return {
         props: {
           source: mdxSource,
           frontMatter: {
+            ...frontMatter,
             title: frontMatter.title || params.slug.replace(/-/g, ' '),
             date: postDate,
             description: frontMatter.description || frontMatter.summary || 'No description available'
@@ -194,6 +207,7 @@ export async function getStaticProps({ params }: { params: { slug: string } }) {
         props: {
           source: null,
           frontMatter: {
+            ...frontMatter,
             title: frontMatter.title || params.slug.replace(/-/g, ' '),
             date: frontMatter.date || extractDateFromSlug(params.slug),
             description: 'Error displaying this post'
