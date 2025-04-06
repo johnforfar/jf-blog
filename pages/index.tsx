@@ -2,12 +2,29 @@ import { SliderTips } from '../components/SliderTips'
 import { fetchPosts } from '../utils/api'
 import { AllPosts } from '../components/AllPosts'
 import type { Post } from '../utils/api'
+import Link from 'next/link'
+import { useMemo } from 'react'
 
 interface HomePageProps {
   initialPosts: Post[]
 }
 
 export default function HomePage({ initialPosts }: HomePageProps) {
+  // Extract unique categories
+  const uniqueCategories = useMemo(() => {
+    // Get all categories
+    const categories = initialPosts
+      .flatMap(post => {
+        if (Array.isArray(post.categories)) return post.categories
+        if (typeof post.categories === 'string') return [post.categories]
+        return []
+      })
+      .filter(Boolean)
+    
+    // Make them unique
+    return [...new Set(categories)]
+  }, [initialPosts])
+  
   return (
     <div className="w-full">
       <header className="border-b border-gray-200 dark:border-gray-700 pb-6 mb-4">
@@ -30,10 +47,40 @@ export default function HomePage({ initialPosts }: HomePageProps) {
             </a>
           </div>
           
-          <div className="bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 rounded-lg p-4 shadow-md">
+          <div className="bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 rounded-lg p-4 shadow-md mb-4">
             <p className="text-base mb-2">Welcome to my blog about code and technology.</p>
             <p className="text-base mb-2">Please click the blog post and then TIP me with code wallet !</p>
             <SliderTips defaultAmount={1.00} minAmount={0.10} maxAmount={10.00} />
+          </div>
+          
+          {/* Categories section */}
+          <div className="mt-4 mb-3">
+            <h3 className="text-base font-semibold mb-2">Categories:</h3>
+            <div className="flex flex-wrap gap-2">
+              {uniqueCategories.map(category => {
+                // Format the category display name
+                const displayName = category
+                  .split('-')
+                  .map(word => {
+                    // Special case for AI & NFT
+                    if (word.toLowerCase() === 'ai') return 'AI';
+                    if (word.toLowerCase() === 'nft') return 'NFT';
+                    // Capitalize first letter of each word
+                    return word.charAt(0).toUpperCase() + word.slice(1);
+                  })
+                  .join(' ');
+                
+                return (
+                  <Link 
+                    key={`cat-${category}`}
+                    href={`/?category=${category.toLowerCase().replace(/\s+/g, '-')}`}
+                    className="px-2 py-1 bg-gradient-to-r from-green-700 to-purple-800 hover:from-green-800 hover:to-purple-900 text-white rounded-md transition-all duration-200 text-sm shadow-sm hover:shadow font-medium"
+                  >
+                    {displayName}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </div>
       </header>

@@ -2,18 +2,74 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { getImageUrl, Post } from '../utils/api'
 import { calculateReadTime } from '../utils/functions'
 import BlogCard from './BlogCard'
+import { useRouter } from 'next/router'
 
 export function AllPosts({ posts }: { posts: Post[] }) {
+  const router = useRouter()
+  const { tag, category } = router.query
   const [columns, setColumns] = useState(6) // Default columns
   const [visiblePosts, setVisiblePosts] = useState<Post[]>([])
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(false)
   const postsPerBatch = 24 // Load this many posts at a time
   const observer = useRef<IntersectionObserver | null>(null)
   const lastPostElementRef = useRef<HTMLDivElement>(null)
   
-  // Sort posts in reverse chronological order (newest first)
-  const sortedPosts = useCallback(() => {
-    return [...posts].sort((a, b) => {
+  // Apply filters based on URL parameters
+  useEffect(() => {
+    const filterPosts = () => {
+      // Start with all posts
+      let filtered = [...posts]
+      
+      // Filter by tag if present
+      if (tag && typeof tag === 'string') {
+        const normalizedTag = tag.toLowerCase().replace(/\s+/g, '-')
+        filtered = filtered.filter(post => {
+          // Ensure tags is an array and normalize them for comparison
+          const postTags = Array.isArray(post.tags) 
+            ? post.tags 
+            : typeof post.tags === 'string' 
+              ? [post.tags] 
+              : []
+              
+          return postTags.some(t => 
+            (typeof t === 'string' && t.toLowerCase().replace(/\s+/g, '-') === normalizedTag)
+          )
+        })
+      }
+      
+      // Filter by category if present
+      if (category && typeof category === 'string') {
+        const normalizedCategory = category.toLowerCase().replace(/\s+/g, '-')
+        filtered = filtered.filter(post => {
+          // Ensure categories is an array and normalize them for comparison
+          const postCategories = Array.isArray(post.categories) 
+            ? post.categories 
+            : typeof post.categories === 'string' 
+              ? [post.categories] 
+              : []
+              
+          return postCategories.some((c: string) => 
+            (typeof c === 'string' && c.toLowerCase().replace(/\s+/g, '-') === normalizedCategory)
+          )
+        })
+      }
+      
+      // Update filtered posts
+      setFilteredPosts(filtered)
+      
+      // Reset visible posts when filters change
+      const chronologicalPosts = sortFiltered(filtered)
+      setVisiblePosts(chronologicalPosts.slice(0, postsPerBatch))
+    }
+    
+    filterPosts()
+    // Add router.query as dependency so filtering runs when URL parameters change
+  }, [posts, tag, category])
+  
+  // Sort filtered posts in reverse chronological order (newest first)
+  const sortFiltered = useCallback((postsToSort: Post[]) => {
+    return [...postsToSort].sort((a, b) => {
       // Extract dates from posts
       const dateA = a.date ? new Date(a.date).getTime() : 
                    a.slug.match(/^\d{4}-\d{2}-\d{2}/) ? 
@@ -26,17 +82,16 @@ export function AllPosts({ posts }: { posts: Post[] }) {
       // Sort in reverse order (newest first)
       return dateB - dateA;
     });
-  }, [posts]);
+  }, []);
   
-  // Initialize with first batch of posts
-  useEffect(() => {
-    const chronologicalPosts = sortedPosts();
-    setVisiblePosts(chronologicalPosts.slice(0, postsPerBatch));
-  }, [posts, sortedPosts, postsPerBatch]);
+  // Sort posts in reverse chronological order (newest first)
+  const sortedPosts = useCallback(() => {
+    return sortFiltered(filteredPosts);
+  }, [filteredPosts, sortFiltered]);
   
   // Function to load more posts
   const loadMorePosts = useCallback(() => {
-    if (loading || visiblePosts.length >= posts.length) return
+    if (loading || visiblePosts.length >= filteredPosts.length) return
     
     setLoading(true)
     // Get sorted posts
@@ -49,9 +104,9 @@ export function AllPosts({ posts }: { posts: Post[] }) {
       setLoading(false)
       console.log(`Loaded ${nextBatch.length} more posts, total now: ${visiblePosts.length + nextBatch.length}`)
     }, 300)
-  }, [loading, posts.length, visiblePosts.length, sortedPosts]);
+  }, [loading, filteredPosts.length, visiblePosts.length, sortedPosts]);
   
-  // Set up intersection observer for infinite scrolling
+  // Update observer to watch filtered post count
   useEffect(() => {
     if (loading) return
     
@@ -62,7 +117,7 @@ export function AllPosts({ posts }: { posts: Post[] }) {
     
     // Create new observer
     observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && visiblePosts.length < posts.length) {
+      if (entries[0].isIntersecting && visiblePosts.length < filteredPosts.length) {
         loadMorePosts()
       }
     }, { threshold: 0.5 })
@@ -77,7 +132,7 @@ export function AllPosts({ posts }: { posts: Post[] }) {
         observer.current.disconnect()
       }
     }
-  }, [loading, loadMorePosts, visiblePosts.length, posts.length])
+  }, [loading, loadMorePosts, visiblePosts.length, filteredPosts.length])
   
   // Adjust columns based on screen width
   useEffect(() => {
@@ -148,6 +203,25 @@ export function AllPosts({ posts }: { posts: Post[] }) {
 
   return (
     <div className="w-full px-0">
+      {/* Display filter information if filtering is active */}
+      {(tag || category) && (
+        <div className="mb-6 text-center">
+          <h2 className="text-xl font-semibold mb-2">
+            {tag && <span>Posts tagged with <span className="text-blue-600 dark:text-blue-400">#{tag}</span></span>}
+            {category && <span>Posts in category <span className="text-blue-600 dark:text-blue-400">{category}</span></span>}
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Showing {filteredPosts.length} {filteredPosts.length === 1 ? 'post' : 'posts'}
+          </p>
+          <button 
+            className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            onClick={() => router.push('/')}
+          >
+            Clear filters
+          </button>
+        </div>
+      )}
+
       {/* CSS Grid with auto-fill for responsive, pinterest-style layout */}
       <div 
         className="grid auto-rows-auto gap-4"
@@ -174,7 +248,7 @@ export function AllPosts({ posts }: { posts: Post[] }) {
       </div>
       
       {/* Sentinel element for infinite scrolling - only show if more posts available */}
-      {visiblePosts.length < posts.length && (
+      {visiblePosts.length < filteredPosts.length && (
         <div 
           ref={lastPostElementRef}
           className="flex justify-center items-center py-6 w-full"
@@ -188,9 +262,19 @@ export function AllPosts({ posts }: { posts: Post[] }) {
       )}
       
       {/* Message when all posts are loaded */}
-      {visiblePosts.length >= posts.length && posts.length > postsPerBatch && (
+      {visiblePosts.length >= filteredPosts.length && filteredPosts.length > 0 && (
         <div className="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
           That&apos;s all folks !
+        </div>
+      )}
+
+      {/* No results message */}
+      {filteredPosts.length === 0 && (
+        <div className="text-center py-12">
+          <h3 className="text-xl font-semibold mb-2">No posts found</h3>
+          <p className="text-gray-500 dark:text-gray-400">
+            No posts match the current filter criteria.
+          </p>
         </div>
       )}
     </div>

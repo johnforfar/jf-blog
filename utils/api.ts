@@ -5,6 +5,7 @@ export interface Post {
   title?: string
   date?: string
   tags?: string[] | string
+  categories?: string[] | string
   coverImage?: string
   summary?: string
   authors?: string[] | string

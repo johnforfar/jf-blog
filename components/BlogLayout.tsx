@@ -1,13 +1,18 @@
 import { CodeWallet } from './CodeWallet'
 import { SliderTips } from './SliderTips'
 import NextImage from 'next/image'
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 
+// Function to get the base URL for assets
 const getBaseUrl = () => {
-  return typeof window === 'undefined'
-    ? process.env.BACKEND_URL || 'http://localhost:3001'
-    : '';
+  // Explicitly check for browser environment
+  if (typeof window !== 'undefined') {
+    // Force the backend URL in the browser
+    return 'http://localhost:3001';
+  }
+  // On server, use environment variable
+  return process.env.BACKEND_URL || 'http://localhost:3001';
 };
 
 interface BlogLayoutProps {
@@ -25,13 +30,64 @@ interface BlogLayoutProps {
 // Function to normalize image paths
 const normalizeImagePath = (path: string): string => {
   if (!path) return '';
+  
   // Remove ./ prefix if present
-  let normalized = path.replace(/^\.\/images\//, '');
-  // Ensure it has the correct base path
+  let normalized = path.replace(/^\.\//g, '');
+  
+  // If it starts with 'images/', prefix with '/'
+  if (normalized.startsWith('images/') && !normalized.startsWith('/images/')) {
+    normalized = `/${normalized}`;
+  }
+  
+  // If it doesn't have any path prefix and doesn't start with http, add /images/
   if (!normalized.startsWith('/') && !normalized.startsWith('http')) {
     normalized = `/images/${normalized}`;
   }
+  
+  // Handle spaces in image paths
+  normalized = normalized.replace(/ /g, '%20');
+  
   return normalized;
+};
+
+// Component to handle Markdown images
+const MarkdownImage = ({ src, alt }: { src: string, alt?: string }) => {
+  const baseUrl = getBaseUrl();
+  const [imgSrc, setImgSrc] = useState<string>(() => {
+    // Make sure we're using an absolute URL with the backend server
+    const normalized = normalizeImagePath(src);
+    
+    // Ensure we have a complete URL with base
+    const fullUrl = normalized.startsWith('http') 
+      ? normalized 
+      : `${baseUrl}${normalized}`;
+      
+    return fullUrl;
+  });
+  const [hasRetried, setHasRetried] = useState(false);
+  
+  // Handle image loading error with one retry
+  const handleImageError = () => {
+    if (!hasRetried) {
+      // Add cache busting parameter on retry
+      setImgSrc(`${imgSrc}?retry=${Date.now()}`);
+      setHasRetried(true);
+    }
+  };
+  
+  return (
+    <div className="my-6 flex justify-center">
+      <NextImage
+        src={imgSrc}
+        alt={alt || ''}
+        width={800}
+        height={450}
+        className="rounded-md max-w-full"
+        onError={handleImageError}
+        priority={!hasRetried} // Prioritize first load attempt
+      />
+    </div>
+  );
 };
 
 // A simple component to handle auto-linking of URLs
@@ -47,11 +103,7 @@ const AutoLinkifyText = ({ text }: { text: string }) => {
   return (
     <>
       {segments.map((segment, i) => {
-        // Even segments are normal text, odd segments are URLs
-        if (i % 2 === 0) {
-          return segment;
-        }
-        // Return the URL as a link
+        if (i % 2 === 0) return segment;
         return (
           <a 
             key={i} 
@@ -77,88 +129,63 @@ export default function BlogLayout({ children, frontMatter }: BlogLayoutProps) {
   const categories = frontMatter.categories || []
   const tags = frontMatter.tags || []
   
-  // Ensure images are properly loaded
+  // Force content to display after a timeout even if images are slow to load
   useEffect(() => {
-    // Set a timeout to force imagesLoaded to true after 2 seconds
-    // This ensures content is visible even if images are slow to load
     const timer = setTimeout(() => {
       setImagesLoaded(true);
-    }, 2000);
-    
-    // Preload cover image if exists
-    if (coverImage) {
-      const img = new Image();
-      img.onload = () => {
-        setImagesLoaded(true);
-        clearTimeout(timer);
-      };
-      img.onerror = () => {
-        console.error(`Failed to load cover image: ${coverImage}`);
-        setImagesLoaded(true);
-        clearTimeout(timer);
-      };
-      img.src = `${getBaseUrl()}/images/${coverImage}`;
-    } else {
-      setImagesLoaded(true);
-      clearTimeout(timer);
-    }
+    }, 1000);
     
     return () => clearTimeout(timer);
-  }, [coverImage]);
+  }, []);
   
+  const baseUrl = getBaseUrl();
   const coverImageUrl = coverImage 
-    ? `${getBaseUrl()}/images/${coverImage}`
+    ? `${baseUrl}${normalizeImagePath(coverImage)}`
     : null;
 
-  // Process content to handle image loading
+  // Process content to handle image loading and links
   const processContent = (content: React.ReactNode): React.ReactNode => {
     if (typeof content === 'string') {
       return <AutoLinkifyText text={content} />;
     }
     
-    if (React.isValidElement(content)) {
-      // Handle image elements specifically
-      if (content.type === 'img') {
-        // Type assertion for image props
-        const imgProps = content.props as React.ImgHTMLAttributes<HTMLImageElement>;
-        const src = normalizeImagePath(imgProps.src || '');
-        return (
-          <NextImage 
-            src={`${getBaseUrl()}${src}`}
-            alt={imgProps.alt || ''}
-            width={800}
-            height={450}
-            className="w-full rounded-md my-4"
-            priority={true}
-          />
-        );
-      }
-      
-      // Recursively process children
-      if (content.props && content.props.children) {
-        // Type assertion for children
-        const childrenContent = React.Children.toArray(content.props.children);
-        if (childrenContent.length > 0) {
-          const processedChildren = React.Children.map(childrenContent, child => 
-            processContent(child)
-          );
-          // Clone with type safety
-          return React.cloneElement(content, content.props, processedChildren);
-        }
-      }
+    if (!React.isValidElement(content)) {
+      return content;
     }
     
-    return content;
+    // Handle image elements
+    if (content.type === 'img') {
+      const imgProps = content.props as React.ImgHTMLAttributes<HTMLImageElement>;
+      return <MarkdownImage src={imgProps.src || ''} alt={imgProps.alt} />;
+    }
+    
+    // Handle elements with children by recursively processing them
+    // Type assertion for content.props
+    const props = content.props as { children?: React.ReactNode };
+    const children = props.children;
+    
+    if (!children) {
+      return content;
+    }
+    
+    // Use type assertion to help TypeScript understand
+    return React.cloneElement(
+      content,
+      undefined,
+      React.Children.map(children, child => 
+        processContent(child)
+      )
+    );
   };
 
-  // Process the children to auto-link and handle images
+  // Process the children to handle images and auto-link
   const enhancedChildren = React.Children.map(children, child => 
     processContent(child)
   );
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <article className="prose lg:prose-xl dark:prose-invert">
+      <article className={`prose lg:prose-xl dark:prose-invert ${!imagesLoaded ? 'min-h-screen' : ''}`}>
         {coverImageUrl && (
           <div className="cover-image-container mb-8">
             <NextImage 
@@ -166,8 +193,13 @@ export default function BlogLayout({ children, frontMatter }: BlogLayoutProps) {
               alt={title}
               width={1200}
               height={600}
-              className="cover-image"
+              className="cover-image rounded-md"
               priority={true}
+              onLoad={() => setImagesLoaded(true)}
+              onError={() => {
+                console.error(`Failed to load cover image: ${coverImageUrl}`);
+                setImagesLoaded(true); // Still show content even if cover fails
+              }}
             />
           </div>
         )}
@@ -222,8 +254,8 @@ export default function BlogLayout({ children, frontMatter }: BlogLayoutProps) {
           )}
         </div>
         
-        {/* Content with auto-linked URLs and handled images */}
-        <div className="markdown-content">
+        {/* Content with processed images and links */}
+        <div className={`markdown-content transition-opacity duration-500 ${imagesLoaded ? 'opacity-100' : 'opacity-0'}`}>
           {enhancedChildren}
         </div>
         
