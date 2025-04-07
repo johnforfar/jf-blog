@@ -35,13 +35,25 @@ export const BlogCard = ({
             style={{ aspectRatio: '16/9' }}
             onError={(e) => {
               console.error('Image load error for:', coverImage);
-              e.currentTarget.src = '/placeholder-image.jpg';
+              const img = e.currentTarget;
+              const parent = img.parentElement;
+              if (parent) {
+                const placeholder = document.createElement('div');
+                placeholder.className = "absolute top-0 left-0 w-full h-full bg-gray-700 flex items-center justify-center";
+                
+                const text = document.createElement('span');
+                text.className = "text-white font-medium";
+                text.textContent = "Image not found";
+                placeholder.appendChild(text);
+                
+                parent.replaceChild(placeholder, img);
+              }
             }}
           />
         ) : (
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-blue-800 to-purple-800 flex items-center justify-center">
-            <span className="text-xl font-bold text-white">
-              {title?.charAt(0) || 'B'}
+          <div className="absolute top-0 left-0 w-full h-full bg-gray-700 flex items-center justify-center">
+            <span className="text-white font-medium">
+              No image available
             </span>
           </div>
         )}

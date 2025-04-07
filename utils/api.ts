@@ -214,7 +214,8 @@ export async function fetchPosts() {
 
 export function getImageUrl(imagePath: string) {
   if (!imagePath || imagePath === '') {
-    return '/placeholder-image.jpg';
+    // Return null so the component can handle empty images
+    return null;
   }
   
   // Check if the path already contains http:// or https://

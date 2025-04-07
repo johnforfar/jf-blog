@@ -120,6 +120,188 @@ const AutoLinkifyText = ({ text }: { text: string }) => {
   );
 };
 
+// Add this component for handling YouTube embeds
+const YouTubeEmbed = ({ videoId }: { videoId: string }) => {
+  return (
+    <div className="relative w-full pt-[56.25%] my-6 rounded-lg overflow-hidden shadow-lg">
+      <iframe 
+        className="absolute top-0 left-0 w-full h-full"
+        src={`https://www.youtube.com/embed/${videoId}`}
+        title="YouTube video player" 
+        frameBorder="0" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+        allowFullScreen
+      ></iframe>
+    </div>
+  );
+};
+
+// Add this component for handling Twitter/X embeds
+const TwitterEmbed = ({ tweetUrl }: { tweetUrl: string }) => {
+  useEffect(() => {
+    // Load Twitter widget script
+    const script = document.createElement('script');
+    script.src = 'https://platform.twitter.com/widgets.js';
+    script.async = true;
+    document.body.appendChild(script);
+    
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+  
+  return (
+    <div className="twitter-embed my-6">
+      <blockquote className="twitter-tweet" data-dnt="true">
+        <a href={tweetUrl}></a>
+      </blockquote>
+    </div>
+  );
+};
+
+// Function to extract YouTube video ID
+const getYouTubeVideoId = (url: string): string | null => {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+};
+
+// Function to check if a string is a standalone URL
+const isStandaloneUrl = (text: string): boolean => {
+  const trimmed = text.trim();
+  const urlRegex = /^(https?:\/\/[^\s]+)$/;
+  return urlRegex.test(trimmed);
+};
+
+// Add this function to detect and transform embeddable URLs
+// This function is used for handling raw HTML content with embeddable links
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const processEmbeds = (content: string): React.ReactNode => {
+  // Check if content is a string (raw HTML)
+  if (typeof content !== 'string') return content;
+  
+  // Match Twitter/X post URLs
+  const twitterRegex = /https?:\/\/(www\.)?(twitter\.com|x\.com)\/[a-zA-Z0-9_]+\/status\/[0-9]+/g;
+  
+  // Match YouTube video URLs (both youtube.com and youtu.be formats)
+  const youtubeRegex = /https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[a-zA-Z0-9_-]+/g;
+  
+  // Find all Twitter/X links
+  const twitterMatches = content.match(twitterRegex);
+  
+  // Find all YouTube links
+  const youtubeMatches = content.match(youtubeRegex);
+  
+  let processedContent = content;
+  
+  // Replace Twitter/X links with embeds
+  if (twitterMatches) {
+    twitterMatches.forEach(url => {
+      // Create Twitter embed HTML
+      const tweetEmbed = `<div class="twitter-embed my-4">
+        <blockquote class="twitter-tweet" data-dnt="true">
+          <a href="${url}"></a>
+        </blockquote>
+        <script async src="https://platform.twitter.com/widgets.js"></script>
+      </div>`;
+      
+      // Replace the URL with the embed code
+      processedContent = processedContent.replace(url, tweetEmbed);
+    });
+  }
+  
+  // Replace YouTube links with embeds
+  if (youtubeMatches) {
+    youtubeMatches.forEach(url => {
+      // Extract video ID
+      let videoId = '';
+      if (url.includes('youtube.com')) {
+        videoId = new URL(url).searchParams.get('v') || '';
+      } else if (url.includes('youtu.be')) {
+        videoId = url.split('/').pop() || '';
+      }
+      
+      if (videoId) {
+        // Create YouTube embed HTML
+        const youtubeEmbed = `<div class="youtube-embed my-4">
+          <iframe 
+            width="100%" 
+            height="315" 
+            src="https://www.youtube.com/embed/${videoId}" 
+            title="YouTube video player" 
+            frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowfullscreen
+          ></iframe>
+        </div>`;
+        
+        // Replace the URL with the embed code
+        processedContent = processedContent.replace(url, youtubeEmbed);
+      }
+    });
+  }
+  
+  // Convert the processed string to React elements
+  // This uses dangerouslySetInnerHTML, but it's controlled since we're only 
+  // changing specific URLs to trusted embed code
+  return <div dangerouslySetInnerHTML={{ __html: processedContent }} />;
+};
+
+// Then update your processContent function to use these components
+const processContent = (content: React.ReactNode): React.ReactNode => {
+  if (typeof content === 'string') {
+    // Check if this is a standalone YouTube URL
+    if (isStandaloneUrl(content)) {
+      // Handle YouTube URLs
+      if (content.includes('youtube.com/watch') || content.includes('youtu.be/')) {
+        const videoId = getYouTubeVideoId(content);
+        if (videoId) {
+          return <YouTubeEmbed videoId={videoId} />;
+        }
+      }
+      
+      // Handle Twitter/X URLs
+      if (content.includes('twitter.com/') || content.includes('x.com/')) {
+        // Check if it's a tweet URL with status in it
+        if (content.includes('/status/')) {
+          return <TwitterEmbed tweetUrl={content} />;
+        }
+      }
+    }
+    
+    // Otherwise process as normal text with auto-linkify
+    return <AutoLinkifyText text={content} />;
+  }
+  
+  if (!React.isValidElement(content)) {
+    return content;
+  }
+  
+  // Handle image elements
+  if (content.type === 'img') {
+    const imgProps = content.props as React.ImgHTMLAttributes<HTMLImageElement>;
+    return <MarkdownImage src={imgProps.src || ''} alt={imgProps.alt} />;
+  }
+  
+  // Handle elements with children by recursively processing them
+  // Type assertion for content.props
+  const props = content.props as { children?: React.ReactNode };
+  const children = props.children;
+  
+  if (!children) {
+    return content;
+  }
+  
+  // Use type assertion to help TypeScript understand
+  return React.cloneElement(
+    content,
+    undefined,
+    React.Children.map(children, child => 
+      processContent(child)
+    )
+  );
+};
+
 export default function BlogLayout({ children, frontMatter }: BlogLayoutProps) {
   const [imagesLoaded, setImagesLoaded] = useState(false);
   
@@ -142,41 +324,6 @@ export default function BlogLayout({ children, frontMatter }: BlogLayoutProps) {
   const coverImageUrl = coverImage 
     ? `${baseUrl}${normalizeImagePath(coverImage)}`
     : null;
-
-  // Process content to handle image loading and links
-  const processContent = (content: React.ReactNode): React.ReactNode => {
-    if (typeof content === 'string') {
-      return <AutoLinkifyText text={content} />;
-    }
-    
-    if (!React.isValidElement(content)) {
-      return content;
-    }
-    
-    // Handle image elements
-    if (content.type === 'img') {
-      const imgProps = content.props as React.ImgHTMLAttributes<HTMLImageElement>;
-      return <MarkdownImage src={imgProps.src || ''} alt={imgProps.alt} />;
-    }
-    
-    // Handle elements with children by recursively processing them
-    // Type assertion for content.props
-    const props = content.props as { children?: React.ReactNode };
-    const children = props.children;
-    
-    if (!children) {
-      return content;
-    }
-    
-    // Use type assertion to help TypeScript understand
-    return React.cloneElement(
-      content,
-      undefined,
-      React.Children.map(children, child => 
-        processContent(child)
-      )
-    );
-  };
 
   // Process the children to handle images and auto-link
   const enhancedChildren = React.Children.map(children, child => 
@@ -211,6 +358,14 @@ export default function BlogLayout({ children, frontMatter }: BlogLayoutProps) {
           {/* Date */}
           <span className="text-gray-600 dark:text-gray-400 whitespace-nowrap">
             {originalDate}
+          </span>
+          
+          {/* Divider */}
+          <span className="text-gray-400">•</span>
+          
+          {/* Author */}
+          <span className="text-gray-600 dark:text-gray-400 whitespace-nowrap">
+            Author: Johnny
           </span>
           
           {/* Divider */}
@@ -264,6 +419,19 @@ export default function BlogLayout({ children, frontMatter }: BlogLayoutProps) {
           <CodeWallet amount={1.00} />
         </div>
       </article>
+      
+      {/* Back to Blog Link - Moved outside the article */}
+      <div className="mt-16 mb-24 relative z-10">
+        <hr className="border-t border-gray-300 dark:border-gray-700 mb-8" />
+        <div className="text-center">
+          <Link 
+            href="/" 
+            className="text-2xl font-bold hover:text-blue-400 transition-colors text-white bg-gray-800 dark:bg-gray-700 py-4 px-8 rounded-lg shadow-lg inline-block"
+          >
+            ← Back to Johnny&apos;s Blog
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
