@@ -237,9 +237,9 @@ export function AllPosts({ posts }: { posts: Post[] }) {
               key={post.slug}
               title={parsedPost.title || ''}
               shortDescription={parsedPost.summary}
-              coverImage={parsedPost.coverImage ? getImageUrl(parsedPost.coverImage) : undefined}
+              coverImage={parsedPost.coverImage ? getImageUrl(parsedPost.coverImage) ?? undefined : undefined}
               slug={post.slug}
-              date={parsedPost.date}
+              date={parsedPost.date || undefined}
               readTime={parsedPost.readTime || undefined}
               tags={parsedPost.tags as string[]}
             />

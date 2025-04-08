@@ -23,17 +23,52 @@ interface PostFrontMatter {
 }
 
 /**
+ * Get the appropriate API base URL depending on environment
+ */
+function getApiBaseUrl(): string {
+  // Check if we're running server-side or client-side
+  if (typeof window === 'undefined') {
+    // Server-side rendering
+    return process.env.BACKEND_URL || 'http://localhost:3000';
+  } else {
+    // Client-side rendering
+    // In development, use relative URLs which will proxy through Next.js
+    if (process.env.NODE_ENV === 'development') {
+      return '/api';
+    }
+    // In production, use the full backend URL
+    return 'https://jf-blog-backend.vercel.app/api';
+  }
+}
+
+/**
+ * Get the image server base URL
+ */
+function getImageBaseUrl(): string {
+  // Check if we're running server-side or client-side
+  if (typeof window === 'undefined') {
+    // Server-side rendering
+    return process.env.BACKEND_URL || 'http://localhost:3000';
+  } else {
+    // Client-side rendering
+    // In development
+    if (process.env.NODE_ENV === 'development') {
+      return 'http://localhost:3000';
+    }
+    // In production
+    return 'https://jf-blog-backend.vercel.app';
+  }
+}
+
+/**
  * Fetch a post by slug from the API
  */
 export async function fetchPost(slug: string): Promise<{
   content: string;
   frontMatter: PostFrontMatter;
 }> {
-  const baseUrl = typeof window === 'undefined'
-    ? process.env.BACKEND_URL || 'http://localhost:3001'
-    : '';
-    
-  const url = `${baseUrl}/api/posts/${slug}`;
+  const apiUrl = getApiBaseUrl();
+  const url = `${apiUrl}/posts/${slug}`;
   console.log(`fetchPost - Fetching post: "${slug}" from ${url}`);
 
   try {
@@ -172,13 +207,9 @@ function extractDateFromData(data: DateSource, slug: string): string {
 }
 
 export async function fetchPosts() {
-  // For server-side requests, use the full backend URL
-  const baseUrl = typeof window === 'undefined'
-    ? process.env.BACKEND_URL || 'http://localhost:3001'
-    : ''
-  
-  const url = `${baseUrl}/api/posts`;
-  console.log('fetchPosts - Fetching posts from API');
+  const apiUrl = getApiBaseUrl();
+  const url = `${apiUrl}/posts`;
+  console.log('fetchPosts - Fetching posts from API:', url);
 
   try {
     const response = await fetch(url);
@@ -226,10 +257,7 @@ export function getImageUrl(imagePath: string) {
   // Extract just the filename from the path
   const imageName = imagePath.replace(/^\.?\/images\//, '').split('/').pop();
   
-  const baseUrl = typeof window !== 'undefined'
-    ? 'http://localhost:3001'
-    : (process.env.BACKEND_URL || 'http://localhost:3001');
-  
+  const baseUrl = getImageBaseUrl();
   const fullUrl = `${baseUrl}/images/${imageName}`;
   
   return fullUrl;
