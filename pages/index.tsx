@@ -7,9 +7,10 @@ import { useMemo } from 'react'
 
 interface HomePageProps {
   initialPosts: Post[]
+  isSolanaBlog: boolean
 }
 
-export default function HomePage({ initialPosts }: HomePageProps) {
+export default function HomePage({ initialPosts, isSolanaBlog }: HomePageProps) {
   // Extract unique categories
   const uniqueCategories = useMemo(() => {
     // Get all categories
@@ -29,8 +30,14 @@ export default function HomePage({ initialPosts }: HomePageProps) {
     <div className="w-full">
       <header className="border-b border-gray-200 dark:border-gray-700 pb-6 mb-4">
         <div className="w-full px-4 max-w-screen-2xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mt-6 mb-2">Johnny&apos;s Blog</h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-3">John Forfar is a Dev Rel in AI, Web3 & Gaming</p>
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mt-6 mb-2">
+            {isSolanaBlog ? 'Solana Blog' : 'Johnny\'s Blog'}
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-3">
+            {isSolanaBlog 
+              ? 'Blogging Since Genesis about Solana Blockchain & Buildooors Ecosystem'
+              : 'John Forfar is a Dev Rel in AI, Web3 & Gaming'}
+          </p>
           
           <div className="flex gap-4 mb-4">
             {/* Twitter - Blue by default, white on hover */}
@@ -71,6 +78,35 @@ export default function HomePage({ initialPosts }: HomePageProps) {
               </svg>
               <span>GitHub</span>
             </a>
+            
+            {/* Sister website link in HEADER - Green by default, white on hover */}
+            {process.env.NEXT_PUBLIC_FRONTEND_URL === 'solana.blog' && (
+              <a 
+                href="https://johnforfar.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center text-green-600 dark:text-green-500 hover:text-white transition-colors"
+              >
+                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                </svg>
+                <span>johnforfar.com</span>
+              </a>
+            )}
+            
+            {process.env.NEXT_PUBLIC_FRONTEND_URL === 'johnforfar.com' && (
+              <a 
+                href="https://solana.blog" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center text-green-600 dark:text-green-500 hover:text-white transition-colors"
+              >
+                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                </svg>
+                <span>solana.blog</span>
+              </a>
+            )}
           </div>
           
           <div className="bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 rounded-lg p-4 shadow-md mb-4">
@@ -83,11 +119,11 @@ export default function HomePage({ initialPosts }: HomePageProps) {
           <div className="mt-4 mb-3">
             <h3 className="text-base font-semibold mb-2">Categories:</h3>
             <div className="flex flex-wrap gap-2">
-              {uniqueCategories.map(category => {
+              {uniqueCategories.map((category: string) => {
                 // Format the category display name
                 const displayName = category
                   .split('-')
-                  .map(word => {
+                  .map((word: string) => {
                     // Special case for AI & NFT
                     if (word.toLowerCase() === 'ai') return 'AI';
                     if (word.toLowerCase() === 'nft') return 'NFT';
@@ -156,8 +192,38 @@ export default function HomePage({ initialPosts }: HomePageProps) {
               </svg>
               <span>GitHub</span>
             </a>
+
+            {/* Sister website link in FOOTER - Green by default, white on hover */}
+            {process.env.NEXT_PUBLIC_FRONTEND_URL === 'solana.blog' && (
+              <a 
+                href="https://johnforfar.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center text-green-600 dark:text-green-500 hover:text-white transition-colors"
+              >
+                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                </svg>
+                <span>johnforfar.com</span>
+              </a>
+            )}
+
+            {process.env.NEXT_PUBLIC_FRONTEND_URL === 'johnforfar.com' && (
+              <a 
+                href="https://solana.blog" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center text-green-600 dark:text-green-500 hover:text-white transition-colors"
+              >
+                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                </svg>
+                <span>solana.blog</span>
+              </a>
+            )}
+
           </div>
-          
+
           <div className="text-sm text-gray-500 dark:text-gray-400">
             <p>© {new Date().getFullYear()} Johnny&apos;s Blog. All rights reserved.</p>
           </div>
@@ -170,9 +236,31 @@ export default function HomePage({ initialPosts }: HomePageProps) {
 export async function getStaticProps() {
   try {
     const posts = await fetchPosts()
+    
+    // Filter posts based on frontend URL
+    let filteredPosts = posts || []
+    
+    // If this is the Solana blog, only show Solana posts
+    if (process.env.NEXT_PUBLIC_FRONTEND_URL === 'solana.blog') {
+      filteredPosts = filteredPosts.filter((post: Post) => {
+        // Check if any category is 'solana' or 'solana-news' etc.
+        const postCategories = Array.isArray(post.categories) 
+          ? post.categories 
+          : typeof post.categories === 'string' 
+            ? [post.categories] 
+            : []
+            
+        return postCategories.some((category: unknown) => 
+          typeof category === 'string' && 
+          category.toLowerCase().includes('solana')
+        )
+      })
+    }
+    
     return {
       props: {
-        initialPosts: posts || []
+        initialPosts: filteredPosts,
+        isSolanaBlog: process.env.NEXT_PUBLIC_FRONTEND_URL === 'solana.blog'
       },
       revalidate: 60
     }
@@ -180,7 +268,8 @@ export async function getStaticProps() {
     console.error('getStaticProps - Error:', error)
     return {
       props: {
-        initialPosts: []
+        initialPosts: [],
+        isSolanaBlog: process.env.NEXT_PUBLIC_FRONTEND_URL === 'solana.blog'
       }
     }
   }
