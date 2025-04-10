@@ -3,7 +3,7 @@ import { fetchPosts } from '../utils/api'
 import { AllPosts } from '../components/AllPosts'
 import type { Post } from '../utils/api'
 import Link from 'next/link'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 interface HomePageProps {
   initialPosts: Post[]
@@ -11,6 +11,9 @@ interface HomePageProps {
 }
 
 export default function HomePage({ initialPosts, isSolanaBlog }: HomePageProps) {
+  // Add this state for tracking the selected parent filter
+  const [selectedParent, setSelectedParent] = useState<string | null>(null);
+  
   // Extract unique categories
   const uniqueCategories = useMemo(() => {
     // Get all categories
@@ -116,38 +119,113 @@ export default function HomePage({ initialPosts, isSolanaBlog }: HomePageProps) 
           </div>
           
           {/* Categories section */}
-          <div className="mt-4 mb-3">
-            <h3 className="text-base font-semibold mb-2">Categories:</h3>
-            <div className="flex flex-wrap gap-2">
-              {uniqueCategories.map((category: string) => {
-                // Format the category display name
-                const displayName = category
-                  .split('-')
-                  .map((word: string) => {
-                    // Special case for AI & NFT
-                    if (word.toLowerCase() === 'ai') return 'AI';
-                    if (word.toLowerCase() === 'nft') return 'NFT';
-                    // Capitalize first letter of each word
-                    return word.charAt(0).toUpperCase() + word.slice(1);
-                  })
-                  .join(' ');
+          {!isSolanaBlog && (
+            <div className="mb-4">
+              <h3 className="text-base font-semibold mb-2">Filter by ecosystem:</h3>
+              <div className="flex flex-wrap gap-2">
+                <button 
+                  onClick={() => setSelectedParent(selectedParent === 'solana' ? null : 'solana')}
+                  className="px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-md shadow-sm hover:shadow font-medium"
+                >
+                  Solana (SVM)
+                </button>
                 
-                return (
-                  <Link 
-                    key={`cat-${category}`}
-                    href={`/?category=${category.toLowerCase().replace(/\s+/g, '-')}`}
-                    className="px-2 py-1 bg-gradient-to-r from-green-700 to-purple-800 hover:from-green-800 hover:to-purple-900 text-white rounded-md transition-all duration-200 text-sm shadow-sm hover:shadow font-medium"
-                  >
-                    {displayName}
-                  </Link>
-                );
-              })}
+                <button 
+                  onClick={() => setSelectedParent(selectedParent === 'ai' ? null : 'ai')}
+                  className="px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-md shadow-sm hover:shadow font-medium"
+                >
+                  AI
+                </button>
+                
+                <button 
+                  onClick={() => setSelectedParent(selectedParent === 'ethereum' ? null : 'ethereum')}
+                  className="px-3 py-2 bg-gradient-to-r from-blue-400 to-cyan-600 hover:from-blue-500 hover:to-cyan-700 text-white rounded-md shadow-sm hover:shadow font-medium"
+                >
+                  Ethereum (EVM)
+                </button>
+                
+                <button 
+                  onClick={() => setSelectedParent(selectedParent === 'gaming' ? null : 'gaming')}
+                  className="px-3 py-2 bg-gradient-to-r from-blue-500 to-emerald-600 hover:from-blue-600 hover:to-emerald-700 text-white rounded-md shadow-sm hover:shadow font-medium"
+                >
+                  Web3 Gaming
+                </button>
+              </div>
+            </div>
+          )}
+          
+          <div className="mt-4 mb-3">
+            <h3 className="text-base font-semibold mb-2">
+              {selectedParent 
+                ? `${selectedParent.charAt(0).toUpperCase() + selectedParent.slice(1)} Categories:` 
+                : 'Categories:'}
+              {selectedParent && (
+                <button 
+                  onClick={() => setSelectedParent(null)}
+                  className="ml-2 text-xs text-blue-500 hover:underline"
+                >
+                  (clear filter)
+                </button>
+              )}
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {uniqueCategories
+                .filter((category: string) => {
+                  if (!selectedParent) return true;
+                  
+                  const lowerCategory = category.toLowerCase();
+                  switch(selectedParent) {
+                    case 'solana':
+                      return lowerCategory.includes('solana');
+                    case 'ai':
+                      return lowerCategory.startsWith('ai') || 
+                             lowerCategory.startsWith('ai-') || 
+                             lowerCategory.endsWith('-ai');
+                    case 'ethereum':
+                      return lowerCategory.includes('eth') || 
+                             lowerCategory.includes('evm') || 
+                             lowerCategory.includes('ethereum');
+                    case 'gaming':
+                      return lowerCategory.includes('game') || 
+                             lowerCategory.includes('gaming') || 
+                             lowerCategory.includes('metaverse');
+                    default:
+                      return true;
+                  }
+                })
+                .map((category: string) => {
+                  // Format the category display name
+                  const displayName = category
+                    .split('-')
+                    .map((word: string) => {
+                      // Special case for AI & NFT
+                      if (word.toLowerCase() === 'ai') return 'AI';
+                      if (word.toLowerCase() === 'nft') return 'NFT';
+                      // Capitalize first letter of each word
+                      return word.charAt(0).toUpperCase() + word.slice(1);
+                    })
+                    .join(' ');
+                  
+                  return (
+                    <Link 
+                      key={`cat-${category}`}
+                      href={`/?category=${category.toLowerCase().replace(/\s+/g, '-')}`}
+                      className="px-2 py-1 bg-gradient-to-r from-green-700 to-purple-800 hover:from-green-800 hover:to-purple-900 text-white rounded-md transition-all duration-200 text-sm shadow-sm hover:shadow font-medium"
+                    >
+                      {displayName}
+                    </Link>
+                  );
+                })
+              }
             </div>
           </div>
         </div>
       </header>
       
-      <AllPosts posts={initialPosts} />
+      <AllPosts 
+        posts={initialPosts} 
+        parentFilter={selectedParent} 
+      />
       
       <footer className="border-t border-gray-200 dark:border-gray-700 mt-6 pt-6 pb-8">
         <div className="w-full px-4 max-w-screen-2xl mx-auto text-center">

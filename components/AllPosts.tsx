@@ -4,7 +4,13 @@ import { calculateReadTime } from '../utils/functions'
 import BlogCard from './BlogCard'
 import { useRouter } from 'next/router'
 
-export function AllPosts({ posts }: { posts: Post[] }) {
+export function AllPosts({ 
+  posts,
+  parentFilter = null // Add default value to make it optional
+}: { 
+  posts: Post[],
+  parentFilter?: string | null  // Add the optional prop with the right type
+}) {
   const router = useRouter()
   const { tag, category } = router.query
   const [columns, setColumns] = useState(6) // Default columns
@@ -14,6 +20,23 @@ export function AllPosts({ posts }: { posts: Post[] }) {
   const postsPerBatch = 24 // Load this many posts at a time
   const observer = useRef<IntersectionObserver | null>(null)
   const lastPostElementRef = useRef<HTMLDivElement>(null)
+  
+  // Sort filtered posts in reverse chronological order (newest first)
+  const sortFiltered = useCallback((postsToSort: Post[]) => {
+    return [...postsToSort].sort((a, b) => {
+      // Extract dates from posts
+      const dateA = a.date ? new Date(a.date).getTime() : 
+                   a.slug.match(/^\d{4}-\d{2}-\d{2}/) ? 
+                   new Date(a.slug.match(/^\d{4}-\d{2}-\d{2}/)![0]).getTime() : 0;
+      
+      const dateB = b.date ? new Date(b.date).getTime() : 
+                   b.slug.match(/^\d{4}-\d{2}-\d{2}/) ? 
+                   new Date(b.slug.match(/^\d{4}-\d{2}-\d{2}/)![0]).getTime() : 0;
+      
+      // Sort in reverse order (newest first)
+      return dateB - dateA;
+    });
+  }, []);
   
   // Apply filters based on URL parameters
   useEffect(() => {
@@ -55,6 +78,43 @@ export function AllPosts({ posts }: { posts: Post[] }) {
         })
       }
       
+      // Apply parent filter if present
+      if (parentFilter) {
+        filtered = filtered.filter(post => {
+          // Get categories from the post
+          const postCategories = Array.isArray(post.categories) 
+            ? post.categories 
+            : typeof post.categories === 'string' 
+              ? [post.categories] 
+              : []
+          
+          // Check if any category matches the parent filter criteria
+          return postCategories.some(c => {
+            if (typeof c !== 'string') return false;
+            const lowerCategory = c.toLowerCase();
+            
+            switch(parentFilter) {
+              case 'solana':
+                return lowerCategory.includes('solana');
+              case 'ai':
+                return lowerCategory.startsWith('ai') || 
+                       lowerCategory.startsWith('ai-') || 
+                       lowerCategory.endsWith('-ai');
+              case 'ethereum':
+                return lowerCategory.includes('eth') || 
+                       lowerCategory.includes('evm') || 
+                       lowerCategory.includes('ethereum');
+              case 'gaming':
+                return lowerCategory.includes('game') || 
+                       lowerCategory.includes('gaming') || 
+                       lowerCategory.includes('metaverse');
+              default:
+                return false;
+            }
+          });
+        });
+      }
+      
       // Update filtered posts
       setFilteredPosts(filtered)
       
@@ -64,26 +124,9 @@ export function AllPosts({ posts }: { posts: Post[] }) {
     }
     
     filterPosts()
-    // Add router.query as dependency so filtering runs when URL parameters change
-  }, [posts, tag, category])
-  
-  // Sort filtered posts in reverse chronological order (newest first)
-  const sortFiltered = useCallback((postsToSort: Post[]) => {
-    return [...postsToSort].sort((a, b) => {
-      // Extract dates from posts
-      const dateA = a.date ? new Date(a.date).getTime() : 
-                   a.slug.match(/^\d{4}-\d{2}-\d{2}/) ? 
-                   new Date(a.slug.match(/^\d{4}-\d{2}-\d{2}/)![0]).getTime() : 0;
-      
-      const dateB = b.date ? new Date(b.date).getTime() : 
-                   b.slug.match(/^\d{4}-\d{2}-\d{2}/) ? 
-                   new Date(b.slug.match(/^\d{4}-\d{2}-\d{2}/)![0]).getTime() : 0;
-      
-      // Sort in reverse order (newest first)
-      return dateB - dateA;
-    });
-  }, []);
-  
+    // Add router.query and parentFilter to the dependency array
+  }, [posts, tag, category, parentFilter, sortFiltered])
+    
   // Sort posts in reverse chronological order (newest first)
   const sortedPosts = useCallback(() => {
     return sortFiltered(filteredPosts);
