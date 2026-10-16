@@ -15,7 +15,7 @@
   "dependencies": {
     "@code-wallet/elements": "^2.0.4",
     "date-fns": "^4.1.0",
-    "next": "^15.1.4",
+    "next": "^15.5.28",
     "nextra": "^3.3.1",
     "nextra-theme-blog": "^3.3.1",
     "react": "^19.0.0",
@@ -32,7 +32,7 @@
     "autoprefixer": "^10.4.20",
     "css-loader": "^7.1.2",
     "eslint": "^9",
-    "eslint-config-next": "15.1.4",
+    "eslint-config-next": "^15.5.28",
     "file-loader": "^6.2.0",
     "postcss": "^8",
     "postcss-loader": "^8.1.1",
