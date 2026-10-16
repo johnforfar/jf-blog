@@ -22,7 +22,7 @@ export default function BlogLayout({ children, frontMatter }: BlogLayoutProps) {
   const title = frontMatter?.title || 'Untitled Post'
   const originalDate = frontMatter.date || ''
   const coverImage = frontMatter.coverImage
-  const categories = frontMatter.categories || []
+  const categories = (frontMatter.categories || []).slice(0, 6)
   const tags = frontMatter.tags || []
   
   // Force content to display after a timeout even if images are slow to load

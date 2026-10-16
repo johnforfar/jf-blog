@@ -5,6 +5,8 @@ import type { Post } from '../utils/api'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 
+const TOP_CATEGORIES = 12
+
 interface HomePageProps {
   initialPosts: Post[]
   isSolanaBlog: boolean
@@ -14,21 +16,18 @@ export default function HomePage({ initialPosts, isSolanaBlog }: HomePageProps) 
   // Add this state for tracking the selected parent filter
   const [selectedParent, setSelectedParent] = useState<string | null>(null);
   
-  // Extract unique categories
+  const [showAllCategories, setShowAllCategories] = useState(false);
+
+  // Categories ordered by how many posts use them (the migrated posts carry hundreds of one-off tags)
   const uniqueCategories = useMemo(() => {
-    // Get all categories
-    const categories = initialPosts
-      .flatMap(post => {
-        if (Array.isArray(post.categories)) return post.categories
-        if (typeof post.categories === 'string') return [post.categories]
-        return []
-      })
-      .filter(Boolean)
-    
-    // Make them unique
-    return [...new Set(categories)]
+    const counts = new Map<string, number>()
+    for (const post of initialPosts) {
+      const cats = Array.isArray(post.categories) ? post.categories : post.categories ? [post.categories] : []
+      for (const c of cats.filter(Boolean)) counts.set(c, (counts.get(c) || 0) + 1)
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([c]) => c)
   }, [initialPosts])
-  
+
   return (
     <div className="w-full">
       <header className="border-b border-gray-200 dark:border-gray-700 pb-6 mb-4">
@@ -193,6 +192,7 @@ export default function HomePage({ initialPosts, isSolanaBlog }: HomePageProps) 
                       return true;
                   }
                 })
+                .slice(0, showAllCategories ? undefined : TOP_CATEGORIES)
                 .map((category: string) => {
                   // Format the category display name
                   const displayName = category
@@ -217,6 +217,14 @@ export default function HomePage({ initialPosts, isSolanaBlog }: HomePageProps) 
                   );
                 })
               }
+              {uniqueCategories.length > TOP_CATEGORIES && (
+                <button
+                  onClick={() => setShowAllCategories(!showAllCategories)}
+                  className="px-2 py-1 text-sm text-blue-500 hover:underline"
+                >
+                  {showAllCategories ? 'Show fewer' : `Show all ${uniqueCategories.length}`}
+                </button>
+              )}
             </div>
           </div>
         </div>
