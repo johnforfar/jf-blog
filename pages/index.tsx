@@ -315,25 +315,8 @@ export async function getStaticProps() {
   try {
     const posts = await fetchPosts()
     
-    // Filter posts based on frontend URL
-    let filteredPosts = posts || []
-    
-    // If this is the Solana blog, only show Solana posts
-    if (process.env.NEXT_PUBLIC_FRONTEND_URL === 'solana.blog') {
-      filteredPosts = filteredPosts.filter((post: Post) => {
-        // Check if any category is 'solana' or 'solana-news' etc.
-        const postCategories = Array.isArray(post.categories) 
-          ? post.categories 
-          : typeof post.categories === 'string' 
-            ? [post.categories] 
-            : []
-            
-        return postCategories.some((category: unknown) => 
-          typeof category === 'string' && 
-          category.toLowerCase().includes('solana')
-        )
-      })
-    }
+    // utils/api only returns posts tagged for this site in Sanity
+    const filteredPosts = posts || []
     
     return {
       props: {
